@@ -160,11 +160,24 @@ def upload_file():
     print("upload_file called")
     if 'file' not in request.files:
         return 'No file part'
-    file = request.files['file']
-    if file.filename == '':
-        return 'No selected file'
-    if file:
-        file.save('uploads/' + file.filename)  # Save the file to a desired location
-        return 'File uploaded successfully'
+
+    # Get the list of files
+    files = request.files.getlist('file')
+
+    # Check if any files were uploaded
+    if len(files) == 0:
+        return 'No files uploaded'
+
+    # Iterate over the files and print their names
+    for file in files:
+        if file.filename == '':
+            return 'No selected file'
+        print("File name:", file.filename)
+
+        # Save the file to a desired location
+        file.save('uploads/' + file.filename)
+
+    return 'Files uploaded successfully'
+
 
 
