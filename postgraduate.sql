@@ -11,7 +11,7 @@
  Target Server Version : 80030
  File Encoding         : 65001
 
- Date: 13/04/2024 11:29:06
+ Date: 16/04/2024 10:39:18
 */
 
 SET NAMES utf8mb4;
@@ -23,9 +23,9 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `detail`;
 CREATE TABLE `detail`  (
   `id` int NOT NULL AUTO_INCREMENT COMMENT 'ID',
-  `sn` int NULL DEFAULT NULL COMMENT '学号',
+  `sn` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '学号',
   `course` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '课程',
-  `character` int NULL DEFAULT NULL COMMENT '性质',
+  `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '性质',
   `grade` int NULL DEFAULT NULL COMMENT '成绩',
   `point` decimal(10, 0) NULL DEFAULT NULL COMMENT '学分',
   `required` int NULL DEFAULT NULL COMMENT '0表示不包括，1表示包括',
@@ -34,15 +34,12 @@ CREATE TABLE `detail`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Records of detail
--- ----------------------------
-
--- ----------------------------
 -- Table structure for report
 -- ----------------------------
 DROP TABLE IF EXISTS `report`;
 CREATE TABLE `report`  (
-  `sn` int NOT NULL COMMENT '学号',
+  `id` int NOT NULL AUTO_INCREMENT,
+  `sn` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '学号',
   `college` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '学院',
   `major` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '专业',
   `grade` int NULL DEFAULT NULL COMMENT '年级',
@@ -54,20 +51,16 @@ CREATE TABLE `report`  (
   `socre` decimal(10, 0) NULL DEFAULT NULL COMMENT '智育成绩',
   ` comprehensive` decimal(10, 0) NULL DEFAULT NULL COMMENT '综合成绩',
   `sum` decimal(10, 0) NULL DEFAULT NULL COMMENT '总得分',
-  `date` datetime(0) NULL DEFAULT NULL COMMENT '打印日期',
-  PRIMARY KEY (`sn`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Records of report
--- ----------------------------
+  `date` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '打印日期',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for rule
 -- ----------------------------
 DROP TABLE IF EXISTS `rule`;
 CREATE TABLE `rule`  (
-  `id` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `collage` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '学院',
   `grade` int NULL DEFAULT NULL COMMENT '年级',
   `specialized` int NULL DEFAULT NULL COMMENT '专业选修课，0表示不包含，1表示包含',
@@ -79,10 +72,6 @@ CREATE TABLE `rule`  (
   `score` decimal(10, 0) NULL DEFAULT NULL COMMENT '智育成绩权重',
   `comprehensive` decimal(10, 0) NULL DEFAULT NULL COMMENT '综合成绩权重',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Records of rule
--- ----------------------------
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;

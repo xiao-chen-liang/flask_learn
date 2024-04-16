@@ -29,13 +29,13 @@ def connect_to_database():
             return conn
     except Exception as e:
         print(f'Error connecting to the database: {e}')
-        return None
+        return e
 
 
-# Example usage
-connection = connect_to_database()
-if connection:
-    connection.close()
+# # Example usage
+# connection = connect_to_database()
+# if connection:
+#     connection.close()
 
-cnx = mysql.connector.connect(user='scott')
-cursor = cnx.cursor()
+# cnx = mysql.connector.connect(user='scott')
+# cursor = cnx.cursor()
