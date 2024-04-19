@@ -25,7 +25,7 @@ def extract_info(text: str):
 
     for line in first_4_lines:
         if '学院' in line:
-            info['collage'] = line.split('学院: ')[1].split(' ')[0]
+            info['college'] = line.split('学院: ')[1].split(' ')[0]
         if '专业' in line:
             info['major'] = line.split('专业: ')[1].split(' ')[0]
         if '班级' in line:
@@ -181,10 +181,10 @@ def handle_file(file: FileStorage):
                 report.add_report_message_to_report_table(info, cursor)
                 # Call the add_detail_message_to_detail_table function from detail.py
                 detail.add_detail_message_to_detail_table(detail_data, cursor)
-                # judge the collage and grade is existed or not
-                # if not existed, add the collage and grade to the rule table
-                if not rule.collage_and_grade_is_exist(info, same_cursor):
-                    rule.add_collage_and_grade_to_rule_table(info, cursor)
+                # judge the college and grade is existed or not
+                # if not existed, add the college and grade to the rule table
+                if not rule.college_and_grade_is_exist(info, same_cursor):
+                    rule.add_college_and_grade_to_rule_table(info, cursor)
                 conn.commit()
             except Exception as e:
                 conn.rollback()
@@ -212,3 +212,45 @@ def handle_file(file: FileStorage):
             os.remove(score_report_path)
         os.rename(upload_path, score_report_path)
         return res
+
+
+def get_grades_and_colleges():
+    cursor = conn.cursor()
+    # Call the get_grades_and_colleges function from rule.py
+    res = rule.get_grades_and_colleges(cursor)
+    cursor.close()
+    return convert_to_cascader_options(res)
+
+
+def convert_to_cascader_options(data):
+    cascader_options = []
+
+    # Group data by grade
+    grouped_data = {}
+    for college, grade in data:
+        if grade not in grouped_data:
+            grouped_data[grade] = []
+        grouped_data[grade].append(college)
+
+    # Convert data into cascader options format
+    for grade, colleges in grouped_data.items():
+        grade_option = {'value': grade, 'label': str(grade), 'children': []}
+        college_options = [{'value': college, 'label': college} for college in colleges]
+        grade_option['children'] = college_options
+        cascader_options.append(grade_option)
+
+    return cascader_options
+
+# Example usage
+def get_rule_data(grade, college):
+    try:
+        # cursor = conn.cursor()
+        # Call the get_rule_data function from rule.py
+        res = rule.get_rule_data(grade, college, same_cursor)
+        return res
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+        raise e
+
