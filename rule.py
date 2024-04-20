@@ -69,3 +69,28 @@ def get_rule_data(grade, college, cursor):
         print(error_message)
         raise Exception(error_message)
     return None
+
+
+def update_rule_data(data, cursor):
+    """Update rule data in the rule table"""
+    try:
+        # Update the 'rule' table with the new data
+        update_query = """UPDATE rule 
+                          SET college = %s, grade = %s, specialized = %s, 
+                              public = %s, policy = %s, pe = %s, skill = %s, 
+                              theory = %s, score = %s, comprehensive = %s 
+                          WHERE id = %s"""
+
+        update_data = (data['college'], data['grade'], data['specialized'], data['public'],
+                       data['policy'], data['pe'], data['skill'], data['theory'],
+                       data['score'], data['comprehensive'], data['id'])
+
+        cursor.execute(update_query, update_data)
+        print(f"Updated the rule data for {data['grade']} - {data['college']}")
+        return data['id']  # Return the key to be updated
+    except Exception as e:
+        error_message = f"An error occurred while updating rule data: {e}"
+        print(error_message)
+        raise Exception(error_message)
+
+

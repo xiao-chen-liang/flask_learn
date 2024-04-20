@@ -83,5 +83,26 @@ def get_rule_data(grade, college):
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/update_rule_data', methods=['POST'])
+def update_rule_data():
+    try:
+        # Get the JSON data from the request body
+        data = request.get_json()
+
+        # Assuming `data` contains the updated rule data
+        # You can then pass this data to your core function to update the rule table
+        # Example:
+        # core.update_rule_data(data)
+
+        # pass the data to core.py to update the rule data
+        return core.update_rule_data(data)
+
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+        return jsonify({'error': error_message}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -254,3 +254,15 @@ def get_rule_data(grade, college):
         traceback.print_exc()
         raise e
 
+
+def update_rule_data(data):
+    try:
+        cursor = conn.cursor()
+        # Call the update_rule_data function from rule.py
+        id = rule.update_rule_data(data, cursor)
+        conn.commit()
+        res = {'id': id}
+        return res
+    except Exception as e:
+        conn.rollback()
+        raise e
