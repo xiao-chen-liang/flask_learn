@@ -20,8 +20,13 @@ def college_and_grade_is_exist(info: dict, cursor: MySQLCursorAbstract):
     try:
         # Query the 'rule' table to check if the college and grade already exist
         cursor.execute("SELECT college, grade FROM rule WHERE college = %s AND grade = %s", (info.get('college'), info['grade']))
-        result = cursor.fetchone()
-        return True if result else False
+        result = cursor.fetchall()
+        if result is None:
+            return False
+        if len(result) == 1:
+            return True
+        elif len(result) > 1:
+            raise Exception("There are multiple records for the same college and grade in the rule table")
     except Exception as e:
         error_message = f"An error occurred while checking college and grade in rule table: {e}"
         print(error_message)

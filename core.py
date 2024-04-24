@@ -13,9 +13,6 @@ import mysql_connection
 upload_directory = 'uploads'
 score_report_directory = 'score_report'
 
-conn = mysql_connection.connect_to_database()
-same_cursor = conn.cursor()
-
 
 def extract_info(text: str):
     # Split the multi-line string into lines and select the first 4 lines
@@ -122,6 +119,63 @@ def extract_data(data: list, info: dict):
     return detail_data
 
 
+def query_date(info):
+    with mysql_connection.connect_to_database() as conn:
+        with conn.cursor() as cursor:
+            return report.query_date(info, cursor)
+
+
+def sn_is_exist(info):
+    with mysql_connection.connect_to_database() as conn:
+        with conn.cursor() as cursor:
+            return report.sn_is_exist(info, cursor)
+
+
+def update_report(info, detail_data):
+    with mysql_connection as conn:
+        try:
+            cursor = conn.cursor()
+            # Call the delete_detail_message_from_detail_table function from detail.py
+            detail.delete_detail_message_from_detail_table(info, cursor)
+            # Call the add_detail_message_to_detail_table function from detail.py
+            detail.add_detail_message_to_detail_table(detail_data, cursor)
+            # Call the change_date function from report.py
+            report.change_date(info, cursor)
+        except Exception as e:
+            conn.rollback()
+            raise e
+        else:
+            res = "The report is updated"
+            conn.commit()
+            return res
+        finally:
+            cursor.close()
+
+
+def upload_report(info, detail_data):
+    with mysql_connection.connect_to_database() as conn:
+        try:
+            cursor = conn.cursor()
+            # Call the add_report_message_to_report_table function from report.py
+            report.add_report_message_to_report_table(info, cursor)
+            # Call the add_detail_message_to_detail_table function from detail.py
+            detail.add_detail_message_to_detail_table(detail_data, cursor)
+            # judge the college and grade is existed or not
+            # if not existed, add the college and grade to the rule table
+            if not rule.college_and_grade_is_exist(info, cursor):
+                rule.add_college_and_grade_to_rule_table(info, cursor)
+        except Exception as e:
+            conn.rollback()
+            raise e
+        else:
+            res = "The report is updated"
+            conn.commit()
+            return res
+        finally:
+            cursor.close()
+
+
+
 def handle_file(file: FileStorage):
     try:
         filename = file.filename
@@ -136,11 +190,11 @@ def handle_file(file: FileStorage):
         info = extract_info(text)
 
         # find weather the report need to be updated or not
-        if report.sn_is_exist(info, same_cursor):
+        if sn_is_exist(info):
             print("The sn is existed")
 
             # query the date according to the info[sn]
-            database_date = report.query_date(info, same_cursor)
+            database_date = query_date(info)
             # formats of database_date and info[date] is something like '2024/04/12'
             # turn the string to date type
             current_date = database_date.split('/')
@@ -150,24 +204,7 @@ def handle_file(file: FileStorage):
                 print("The report need to be updated")
                 detail_data = extract_data(data, info)
 
-                try:
-                    cursor = conn.cursor()
-                    # Call the delete_detail_message_from_detail_table function from detail.py
-                    detail.delete_detail_message_from_detail_table(info, cursor)
-                    # Call the add_detail_message_to_detail_table function from detail.py
-                    detail.add_detail_message_to_detail_table(detail_data, cursor)
-                    # Call the change_date function from report.py
-                    report.change_date(info, cursor)
-                    conn.commit()
-                except Exception as e:
-                    conn.rollback()
-                    raise e
-                else:
-                    res = "The report is updated"
-                finally:
-                    cursor.close()
-
-
+                res = update_report(info, detail_data)
 
             else:
                 raise ce.TheReportIsNotNewestError("The report is not the newest")
@@ -175,24 +212,7 @@ def handle_file(file: FileStorage):
         else:
             detail_data = extract_data(data, info)
 
-            try:
-                cursor = conn.cursor()
-                # Call the add_report_message_to_report_table function from report.py
-                report.add_report_message_to_report_table(info, cursor)
-                # Call the add_detail_message_to_detail_table function from detail.py
-                detail.add_detail_message_to_detail_table(detail_data, cursor)
-                # judge the college and grade is existed or not
-                # if not existed, add the college and grade to the rule table
-                if not rule.college_and_grade_is_exist(info, same_cursor):
-                    rule.add_college_and_grade_to_rule_table(info, cursor)
-                conn.commit()
-            except Exception as e:
-                conn.rollback()
-                raise e
-            else:
-                res = "The report is updated"
-            finally:
-                cursor.close()
+            res = upload_report(info, detail_data)
 
     except ce.TheReportIsNotNewestError as e:
         print(f"The report is not the newest")
@@ -203,7 +223,7 @@ def handle_file(file: FileStorage):
         # delete the file
         os.remove(upload_path)
         traceback.print_exc()
-        raise Exception(f"The file has some problem")
+        raise e
     else:
         # rename the file to info.sn.pdf and remove it to the score_report directory
         # if the file is existed in the score_report directory, it will be replaced
@@ -215,6 +235,7 @@ def handle_file(file: FileStorage):
 
 
 def get_grades_and_colleges():
+    conn = mysql_connection.connect_to_database()
     cursor = conn.cursor()
     # Call the get_grades_and_colleges function from rule.py
     res = rule.get_grades_and_colleges(cursor)
@@ -241,12 +262,14 @@ def convert_to_cascader_options(data):
 
     return cascader_options
 
+
 # Example usage
 def get_rule_data(grade, college):
+    conn = mysql_connection.connect_to_database()
     try:
-        # cursor = conn.cursor()
+        cursor = conn.cursor()
         # Call the get_rule_data function from rule.py
-        res = rule.get_rule_data(grade, college, same_cursor)
+        res = rule.get_rule_data(grade, college, cursor)
         return res
     except Exception as e:
         error_message = f"An error occurred: {str(e)}"
@@ -256,6 +279,7 @@ def get_rule_data(grade, college):
 
 
 def update_rule_data(data):
+    conn = mysql_connection.connect_to_database()
     try:
         cursor = conn.cursor()
         # Call the update_rule_data function from rule.py

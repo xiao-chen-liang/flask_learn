@@ -1,5 +1,4 @@
 from mysql.connector.abstracts import MySQLCursorAbstract
-from mysql_connection import connect_to_database
 
 def add_detail_message_to_detail_table(detail: list, cursor: MySQLCursorAbstract):
     """Add detail message to the detail table"""
