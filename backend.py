@@ -95,7 +95,60 @@ def update_rule_data():
         # core.update_rule_data(data)
 
         # pass the data to core.py to update the rule data
-        return core.update_rule_data(data)
+        core.update_rule_data(data)
+        core.update_required_score_and_sum(data)
+        return "Rule data and detail data updated successfully!", 200
+
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+        return jsonify({'error': error_message}), 500
+
+
+# get options of grades, colleges and majors
+@app.route('/get_options_of_grades_colleges_majors')
+def get_options_of_grades_colleges_majors():
+    try:
+        return jsonify(core.get_grade_college_major_options())
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+        return jsonify({'error': error_message}), 500
+
+
+# define a method to receive grade, college and major
+# the arguments are passed in the URL
+@app.route('/get_rule_data_by_grade_college_major/<string:grade>/<string:college>/<string:major>')
+def get_report_data_by_grade_college_major(grade, college, major):
+    try:
+        # Get rule data based on the selected grade, college and major
+        rule_response = core.get_report_data_by_grade_college_major(grade, college, major)
+        if rule_response:
+            return jsonify(rule_response)
+        else:
+            return jsonify({'error': 'Rule data not found for the selected grade, college and major'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# const response = await axios.put(updateUrl, { comprehensive: row.inputValue, sn: row.sn});
+# const updateUrl = `http://localhost:5000/update_comprehensive/`;
+@app.route('/update_comprehensive', methods=['PUT'])
+def update_comprehensive():
+    try:
+        # Get the JSON data from the request body
+        data = request.get_json()
+
+        # Assuming `data` contains the updated comprehensive score and student number
+        # You can then pass this data to your core function to update the comprehensive score
+        # Example:
+        # core.update_comprehensive(data)
+
+        # pass the data to core.py to update the comprehensive score
+        core.update_comprehensive(data)
+        return "Comprehensive score updated successfully!", 200
 
     except Exception as e:
         error_message = f"An error occurred: {str(e)}"

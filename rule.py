@@ -99,3 +99,6 @@ def update_rule_data(data, cursor):
         raise Exception(error_message)
 
 
+
+
+
