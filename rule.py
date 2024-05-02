@@ -83,12 +83,12 @@ def update_rule_data(data, cursor):
         update_query = """UPDATE rule 
                           SET college = %s, grade = %s, specialized = %s, 
                               public = %s, policy = %s, pe = %s, skill = %s, 
-                              theory = %s, score = %s, comprehensive = %s 
+                              theory = %s, score = %s, comprehensive = %s, totality = %s 
                           WHERE id = %s"""
 
         update_data = (data['college'], data['grade'], data['specialized'], data['public'],
                        data['policy'], data['pe'], data['skill'], data['theory'],
-                       data['score'], data['comprehensive'], data['id'])
+                       data['score'], data['comprehensive'], data['totality'], data['id'])
 
         cursor.execute(update_query, update_data)
         print(f"Updated the rule data for {data['grade']} - {data['college']}")
@@ -97,8 +97,5 @@ def update_rule_data(data, cursor):
         error_message = f"An error occurred while updating rule data: {e}"
         print(error_message)
         raise Exception(error_message)
-
-
-
 
 

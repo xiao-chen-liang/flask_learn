@@ -11,11 +11,24 @@
  Target Server Version : 80030
  File Encoding         : 65001
 
- Date: 20/04/2024 10:10:13
+ Date: 28/04/2024 16:41:38
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for allocation
+-- ----------------------------
+DROP TABLE IF EXISTS `allocation`;
+CREATE TABLE `allocation`  (
+  `id` int NOT NULL,
+  `major` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '专业',
+  `grade` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '年级',
+  `college` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '学院',
+  `quantity` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '0' COMMENT '年度专业最少保研人数',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for detail
@@ -26,12 +39,12 @@ CREATE TABLE `detail`  (
   `sn` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '学号',
   `course` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '课程',
   `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '性质',
-  `grade` int NULL DEFAULT NULL COMMENT '成绩',
   `point` decimal(10, 2) NULL DEFAULT NULL COMMENT '学分',
+  `grade` int NULL DEFAULT NULL COMMENT '成绩',
   `required` int NULL DEFAULT 1 COMMENT '0表示不包括，1表示包括',
   `semester` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '学期',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4549 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 16905 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for report
@@ -48,12 +61,12 @@ CREATE TABLE `report`  (
   `required` decimal(10, 2) NULL DEFAULT NULL COMMENT '必修学分',
   `specialized` decimal(10, 2) NULL DEFAULT NULL COMMENT '专业选修学分',
   `public` decimal(10, 2) NULL DEFAULT NULL COMMENT '公共选修学分',
-  `socre` decimal(10, 2) NULL DEFAULT NULL COMMENT '智育成绩',
-  ` comprehensive` decimal(10, 2) NULL DEFAULT NULL COMMENT '综合成绩',
+  `score` decimal(10, 2) NULL DEFAULT NULL COMMENT '智育成绩',
+  `comprehensive` decimal(10, 2) NULL DEFAULT 0.00 COMMENT '综合成绩',
   `sum` decimal(10, 2) NULL DEFAULT NULL COMMENT '总得分',
   `date` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '打印日期',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 82 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 258 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for rule
@@ -71,7 +84,8 @@ CREATE TABLE `rule`  (
   `theory` int NULL DEFAULT 1 COMMENT '军事理论，0表示不包含，1表示包含',
   `score` decimal(10, 2) NULL DEFAULT 0.85 COMMENT '智育成绩权重',
   `comprehensive` decimal(10, 2) NULL DEFAULT 0.15 COMMENT '综合成绩权重',
+  `totality` int NULL DEFAULT 0 COMMENT '年度学院保研总人数',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 60 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 111 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;

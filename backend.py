@@ -61,6 +61,7 @@ def get_rules():
         traceback.print_exc()
         return jsonify({'error': error_message}), 500
 
+
 # Mock data for demonstration
 rule_data = {
     ('2020', '大数据与智能工程学院'): {'policy': 1, 'pe': 0, 'skill': 1},
@@ -133,6 +134,21 @@ def get_report_data_by_grade_college_major(grade, college, major):
         return jsonify({'error': str(e)}), 500
 
 
+# define a method to receive grade, college and return the reports
+# the arguments are passed in the URL
+@app.route('/get_report_data_by_grade_college/<string:grade>/<string:college>')
+def get_report_data_by_grade_college(grade, college):
+    try:
+        # Get rule data based on the selected grade and college
+        rule_response = core.get_report_data_by_grade_college(grade, college)
+        if rule_response:
+            return jsonify(rule_response)
+        else:
+            return jsonify({'error': 'Rule data not found for the selected grade and college'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # const response = await axios.put(updateUrl, { comprehensive: row.inputValue, sn: row.sn});
 # const updateUrl = `http://localhost:5000/update_comprehensive/`;
 @app.route('/update_comprehensive', methods=['PUT'])
@@ -149,6 +165,40 @@ def update_comprehensive():
         # pass the data to core.py to update the comprehensive score
         core.update_comprehensive(data)
         return "Comprehensive score updated successfully!", 200
+
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+        return jsonify({'error': error_message}), 500
+
+
+# get allocation data by grade and college
+@app.route('/get_allocation_data/<string:grade>/<string:college>')
+def get_allocation_data(grade, college):
+    try:
+        return jsonify(core.get_allocation_data(grade, college))
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+        return jsonify({'error': error_message}), 500
+
+# update allocation data
+@app.route('/update_allocation_data', methods=['PUT'])
+def update_allocation_data():
+    try:
+        # Get the JSON data from the request body
+        data = request.get_json()
+
+        # Assuming `data` contains the updated allocation data
+        # You can then pass this data to your core function to update the allocation table
+        # Example:
+        # core.update_allocation_data(data)
+
+        # pass the data to core.py to update the allocation data
+        core.update_allocation_data(data)
+        return "Allocation data updated successfully!", 200
 
     except Exception as e:
         error_message = f"An error occurred: {str(e)}"

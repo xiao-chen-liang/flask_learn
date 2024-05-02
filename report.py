@@ -173,3 +173,20 @@ def update_comprehensive(data, cursor):
         error_message = f"An error occurred while changing comprehensive in report table: {e}"
         print(error_message)
         raise Exception(error_message)
+
+
+def get_report_data_by_grade_college(grade, college, cursor):
+    """Get report data based on the selected grade and college"""
+    try:
+        # Query the 'report' table to get the report data based on grade and college
+        cursor.execute("SELECT * FROM report WHERE grade = %s AND college = %s", (grade, college))
+        result = cursor.fetchall()
+        if result:
+            # Convert the fetched row to a dictionary
+            columns = [desc[0] for desc in cursor.description]  # Get column names
+            report_dict = [dict(zip(columns, row)) for row in result]  # Create dictionary from column names and row data
+            return report_dict
+    except Exception as e:
+        error_message = f"An error occurred while getting report data: {e}"
+        print(error_message)
+        raise Exception(error_message)

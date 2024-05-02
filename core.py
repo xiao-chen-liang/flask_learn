@@ -5,6 +5,7 @@ import os
 import report as report
 import rule as rule
 import detail as detail
+import allocation as allocation
 import re
 import custom_exceptions as ce
 import traceback
@@ -199,6 +200,11 @@ def upload_report(info, detail_data):
             # if not existed, add the college and grade to the rule table
             if not rule.college_and_grade_is_exist(info, cursor):
                 rule.add_college_and_grade_to_rule_table(info, cursor)
+            # judge the major, college and grade is existed or not
+            # if not existed, add the major, college and grade to the allocation table
+            if not allocation.major_college_and_grade_is_exist(info, cursor):
+                allocation.add_major_college_and_grade_to_allocation_table(info, cursor)
+
         except Exception as e:
             conn.rollback()
             raise e
@@ -625,3 +631,70 @@ def update_comprehensive(data):
                 return res
             finally:
                 cursor.close()
+
+
+def get_report_data_by_grade_college(grade, college):
+    """Get report data based on the selected grade and college"""
+    conn = mysql_connection.connect_to_database()
+    cursor = conn.cursor()
+    try:
+        # Call the get_report_data_by_grade_college function from report.py
+        res = report.get_report_data_by_grade_college(grade, college, cursor)
+        return res
+    except Exception as e:
+        error_message = f"An error occurred while getting report data by grade and college: {e}"
+        print(error_message)
+        raise Exception(error_message)
+    finally:
+        cursor.close()
+
+
+def get_majors_and_quantities(grade, college):
+    """Get all majors and quantities from the allocation table based on the selected grade and college"""
+    conn = mysql_connection.connect_to_database()
+    cursor = conn.cursor()
+    try:
+        # Call the get_majors_and_quantities function from allocation.py
+        res = allocation.get_majors_and_quantities(grade, college, cursor)
+        return res
+    except Exception as e:
+        error_message = f"An error occurred while getting all majors and quantities: {e}"
+        print(error_message)
+        raise Exception(error_message)
+    finally:
+        cursor.close()
+
+
+def get_allocation_data(grade, college):
+    """Get allocation data based on the selected grade and college"""
+    conn = mysql_connection.connect_to_database()
+    cursor = conn.cursor()
+    try:
+        # Call the get_allocation_data function from allocation.py
+        res = allocation.get_allocation_data(grade, college, cursor)
+        return res
+    except Exception as e:
+        error_message = f"An error occurred while getting allocation data: {e}"
+        print(error_message)
+        raise Exception(error_message)
+    finally:
+        cursor.close()
+
+
+def update_allocation_data(data):
+    """Update allocation data in the allocation table"""
+    conn = mysql_connection.connect_to_database()
+    cursor = conn.cursor()
+    try:
+        # Call the update_allocation_data function from allocation.py
+        allocation.update_allocation_data(data, cursor)
+        conn.commit()
+        res = "Allocation data updated successfully!"
+        return res
+    except Exception as e:
+        conn.rollback()
+        error_message = f"An error occurred while updating allocation data: {e}"
+        print(error_message)
+        raise Exception(error_message)
+    finally:
+        cursor.close()
