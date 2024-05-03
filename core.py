@@ -11,6 +11,7 @@ import custom_exceptions as ce
 import traceback
 import mysql_connection
 from decimal import Decimal
+import pandas as pd
 
 upload_directory = 'uploads'
 score_report_directory = 'score_report'
@@ -698,3 +699,26 @@ def update_allocation_data(data):
         raise Exception(error_message)
     finally:
         cursor.close()
+
+
+def generate_output_file(outputData):
+    file_path = 'output.xlsx'
+
+    # if the file is existed already, delete it
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    # Replace None entries with an empty dictionary
+    processed_data = [item if item is not None else {} for item in outputData['reportData']]
+
+    # Create a DataFrame from the processed data
+    df = pd.DataFrame(processed_data)
+
+    # Create an Excel writer using pandas ExcelWriter
+    with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+        # Write DataFrame to the Excel file
+        df.to_excel(writer, index=False, sheet_name='Sheet1')
+
+    print(f"Excel file '{file_path}' created successfully.")
+
+    return file_path

@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import core
 import traceback
+from flask import send_file
 
 app = Flask(__name__)
 CORS(app)
@@ -206,6 +207,24 @@ def update_allocation_data():
         traceback.print_exc()
         return jsonify({'error': error_message}), 500
 
+
+# let users download the output.xlsx file
+@app.route('/download', methods=['POST'])
+def download_file():
+    try:
+        # Get the outputData from the request body
+        outputData = request.get_json()
+
+        print(outputData)
+
+        file_path = core.generate_output_file(outputData)
+
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+        return jsonify({'error': error_message}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
