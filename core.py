@@ -54,7 +54,7 @@ def extract_info(text: str):
 
         return info
     except Exception as e:
-        raise Exception("An error occurred while extracting information from the file")
+        raise Exception("成绩单格式有误")
 
 
 def extract_data(data: list, info: dict):
@@ -118,7 +118,7 @@ def extract_data(data: list, info: dict):
             row_data = [info['sn']] + row_data
             detail_data.append(row_data)
     except Exception as e:
-        raise Exception("An error occurred while extracting data from the file")
+        raise Exception("成绩单格式有误")
 
     if not check_all_pass(detail_data):
 
@@ -140,13 +140,12 @@ def extract_data(data: list, info: dict):
                         detail.delete_detail_message_from_detail_table(info, cursor)
                         report.delete_report_message_from_report_table(info['sn'], cursor)
                         conn.commit()
-                        raise ce.NotAllCoursesPassedError("Not all courses are passed, and the report is the newest, "
-                                                          "so the preview report need to be delete")
+                        raise ce.NotAllCoursesPassedError("此成绩单存在不及格成绩且为最新成绩单，已上传成绩单已被删除，不上传此成绩单")
             else:
                 raise ce.NotAllCoursesPassedError("Not all courses are passed, but the report is not the newest, "
                                                   "so the preview report are reserved")
         else:
-            raise ce.NotAllCoursesPassedError("Not all courses are passed, the report is discarded")
+            raise ce.NotAllCoursesPassedError("此成绩单存在不及格成绩，不上传此成绩单")
 
     return detail_data
 
@@ -180,7 +179,7 @@ def update_report(info, detail_data):
             conn.rollback()
             raise e
         else:
-            res = "The report is updated"
+            res = "上传成功"
             conn.commit()
             return res
         finally:
@@ -209,7 +208,7 @@ def upload_report(info, detail_data):
             conn.rollback()
             raise e
         else:
-            res = "The report is uploaded"
+            res = "更新成功"
             conn.commit()
         finally:
             cursor.close()
@@ -257,7 +256,7 @@ def handle_file(file: FileStorage):
                 res = update_report(info, detail_data)
 
             else:
-                raise ce.TheReportIsNotNewestError("The report is not the newest")
+                raise ce.TheReportIsNotNewestError("不是最新的成绩单")
 
         else:
             detail_data = extract_data(data, info)

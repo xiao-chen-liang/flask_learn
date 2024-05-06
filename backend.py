@@ -33,7 +33,7 @@ def upload_file():
         return res, 200
 
     except Exception as e:
-        error_message = f"An error occurred: {str(e)}"
+        error_message = f"{str(e)}"
         print(error_message)
         traceback.print_exc()
         return jsonify({'error': error_message}), 500
