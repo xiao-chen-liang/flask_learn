@@ -13,113 +13,112 @@ import mysql_connection
 from decimal import Decimal
 import pandas as pd
 
-upload_directory = 'uploads'
-score_report_directory = 'score_report'
 
 
 def extract_info(text: str):
-    """extract information from the text of the first page of the report"""
-    # Split the multi-line string into lines and select the first 4 lines
-    first_4_lines = text.splitlines()[:4]
+    try:
+        """extract information from the text of the first page of the report"""
+        # Split the multi-line string into lines and select the first 4 lines
+        first_4_lines = text.splitlines()[:4]
 
-    info = {}  # Dictionary to store extracted information
+        info = {}  # Dictionary to store extracted information
 
-    for line in first_4_lines:
-        if '学院' in line:
-            info['college'] = line.split('学院: ')[1].split(' ')[0]
-        if '专业' in line:
-            info['major'] = line.split('专业: ')[1].split(' ')[0]
-        if '班级' in line:
-            info['grade'] = line.split('班级: ')[1].split(' ')[0]
-        if '学号' in line:
-            info['sn'] = line.split('学号: ')[1].split(' ')[0]
-        if '姓名' in line:
-            info['name'] = line.split('姓名: ')[1].split(' ')[0]
+        for line in first_4_lines:
+            if '学院' in line:
+                info['college'] = line.split('学院: ')[1].split(' ')[0]
+            if '专业' in line:
+                info['major'] = line.split('专业: ')[1].split(' ')[0]
+            if '班级' in line:
+                info['grade'] = line.split('班级: ')[1].split(' ')[0]
+            if '学号' in line:
+                info['sn'] = line.split('学号: ')[1].split(' ')[0]
+            if '姓名' in line:
+                info['name'] = line.split('姓名: ')[1].split(' ')[0]
 
-    # Split the multi-line string into lines and select the last 4 lines
-    lines = text.splitlines()
-    last_4_lines = lines[-4:]
+        # Split the multi-line string into lines and select the last 4 lines
+        lines = text.splitlines()
+        last_4_lines = lines[-4:]
 
-    for line in last_4_lines:
-        if '获得总学分' in line:
-            info['total'] = float(line.split('获得总学分 ')[1].split(' ')[0])
-            info['required'] = float(line.split('必修 ')[1].split(' ')[0])
-            info['specialized'] = float(line.split('专业选修 ')[1].split(' ')[0])
-            info['public'] = float(line.split('公共选修 ')[1].split(' ')[0])
-        if '打印日期' in line:
-            info['date'] = line.split('打印日期:')[1].split(' ')[0]
+        for line in last_4_lines:
+            if '获得总学分' in line:
+                info['total'] = float(line.split('获得总学分 ')[1].split(' ')[0])
+                info['required'] = float(line.split('必修 ')[1].split(' ')[0])
+                info['specialized'] = float(line.split('专业选修 ')[1].split(' ')[0])
+                info['public'] = float(line.split('公共选修 ')[1].split(' ')[0])
+            if '打印日期' in line:
+                info['date'] = line.split('打印日期:')[1].split(' ')[0]
 
-    # Use regular expression to find four continuous digits
-    match = re.search(r'\d{4}', info['grade'])
-    info['grade'] = int(match.group()) if match else None
+        # Use regular expression to find four continuous digits
+        match = re.search(r'\d{4}', info['grade'])
+        info['grade'] = int(match.group()) if match else None
 
-    return info
+        return info
+    except Exception as e:
+        raise Exception("An error occurred while extracting information from the file")
 
 
 def extract_data(data: list, info: dict):
-    """extract data from the table of the report"""
-    # Find the index of the string '毕业论文（设计）题目'
-    index = None
-    for i, sublist in enumerate(data):
-        if '毕业论文(设计)题目' in sublist:
-            index = i
-            break
+    try:
+        """extract data from the table of the report"""
+        # Find the index of the string '毕业论文（设计）题目'
+        index = None
+        for i, sublist in enumerate(data):
+            if '毕业论文(设计)题目' in sublist:
+                index = i
+                break
 
-    # Cut out the list after the occurrence of the string
-    if index is not None:
-        data = data[:index]
+        # Cut out the list after the occurrence of the string
+        if index is not None:
+            data = data[:index]
 
-    del data[0]
+        del data[0]
 
-    new_data = []
-    for row in data:
-        new_row = [row[0], row[1], row[2], row[3], row[4], row[5]]
-        new_data.append(new_row)
+        new_data = []
+        for row in data:
+            new_row = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            new_data.append(new_row)
 
-    for row in data:
-        new_row = [row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13]]
-        new_data.append(new_row)
+        for row in data:
+            new_row = [row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13]]
+            new_data.append(new_row)
 
-    for row in data:
-        new_row = [row[14], row[15], row[16], row[17], row[18], row[19]]
-        new_data.append(new_row)
+        for row in data:
+            new_row = [row[14], row[15], row[16], row[17], row[18], row[19]]
+            new_data.append(new_row)
 
-    cleaned_list = [[item for item in sublist if item is not None and item != ''] for sublist in new_data]
+        cleaned_list = [[item for item in sublist if item is not None and item != ''] for sublist in new_data]
 
-    last_score_index = None  # Initialize last_score_index before the loop
+        last_score_index = None  # Initialize last_score_index before the loop
 
-    for i, sublist in enumerate(cleaned_list):
-        if '必修' in sublist or '选修' in sublist or '公修' in sublist:
-            last_score_index = i
+        for i, sublist in enumerate(cleaned_list):
+            if '必修' in sublist or '选修' in sublist or '公修' in sublist:
+                last_score_index = i
 
-    if last_score_index is not None:
-        new = cleaned_list[:last_score_index + 1]
-    else:
-        new = cleaned_list[:]  # If the condition is never satisfied, use the entire cleaned_list
-
-    semester = None
-    last_data = []
-    for row in new:
-        if len(row) == 1:
-            semester = row[0]
+        if last_score_index is not None:
+            new = cleaned_list[:last_score_index + 1]
         else:
-            row.append(semester)
-            last_data.append(row)
+            new = cleaned_list[:]  # If the condition is never satisfied, use the entire cleaned_list
 
-    # Create a workbook and select the active worksheet
-    wb = Workbook()
-    ws = wb.active
-    detail_data = []
+        semester = None
+        last_data = []
+        for row in new:
+            if len(row) == 1:
+                semester = row[0]
+            else:
+                row.append(semester)
+                last_data.append(row)
 
-    # Write data to the worksheet
-    for row_index, row_data in enumerate(last_data):
-        row_data = [info['sn']] + row_data
-        detail_data.append(row_data)
-    #     for col_index, value in enumerate(row_data):
-    #         ws.cell(row=row_index + 1, column=col_index + 1, value=value)
-    #
-    # # Save the workbook to a file
-    # wb.save("fact.xlsx")
+        # Create a workbook and select the active worksheet
+        wb = Workbook()
+        ws = wb.active
+        detail_data = []
+
+        # Write data to the worksheet
+        for row_index, row_data in enumerate(last_data):
+            row_data = [info['sn']] + row_data
+            detail_data.append(row_data)
+    except Exception as e:
+        raise Exception("An error occurred while extracting data from the file")
 
     if not check_all_pass(detail_data):
 
@@ -225,6 +224,9 @@ def upload_report(info, detail_data):
 
 def handle_file(file: FileStorage):
     """Handle the uploaded file and extract the required information"""
+
+    upload_directory = 'uploads'
+    score_report_directory = 'score_report'
     try:
         filename = file.filename
         upload_path = os.path.join(upload_directory, filename)
@@ -264,11 +266,13 @@ def handle_file(file: FileStorage):
 
     except ce.TheReportIsNotNewestError as e:
         print(f"The report is not the newest")
+        os.remove(upload_path)
         traceback.print_exc()
         raise Exception(e.message)
 
     except ce.NotAllCoursesPassedError as e:
         print(f"Not all courses are passed")
+        os.remove(upload_path)
         traceback.print_exc()
         raise Exception(e.message)
 
@@ -283,11 +287,7 @@ def handle_file(file: FileStorage):
         score_report_path = os.path.join(score_report_directory, info['sn'] + '.pdf')
         if os.path.exists(score_report_path):
             os.remove(score_report_path)
-    finally:
         os.rename(upload_path, score_report_path)
-
-        # update the required field of the detail table according to the sn and the sn_rule
-
         return res
 
 
@@ -301,25 +301,40 @@ def get_grades_and_colleges():
     return convert_to_cascader_options(res)
 
 
+# convert the grades and colleges into cascader options format
+# sort the data by college and grade
+# all labels are string type
+# using method similar to the function convert_to_cascader_options_three_layer
+
 def convert_to_cascader_options(data):
-    """Convert the grades and colleges into cascader options format"""
-    cascader_options = []
+    # Sort the data by college and grade
+    data_sorted = sorted(data, key=lambda x: (x[1], x[0]))  # Sort by college and grade
 
-    # Group data by grade
-    grouped_data = {}
-    for college, grade in data:
-        if grade not in grouped_data:
-            grouped_data[grade] = []
-        grouped_data[grade].append(college)
+    options = []
 
-    # Convert data into cascader options format
-    for grade, colleges in grouped_data.items():
-        grade_option = {'value': grade, 'label': str(grade), 'children': []}
-        college_options = [{'value': college, 'label': college} for college in colleges]
-        grade_option['children'] = college_options
-        cascader_options.append(grade_option)
+    # Create a dictionary to store parent nodes based on the college
+    parent_dict = {}
 
-    return cascader_options
+    for item in data_sorted:
+        grade, college = item
+        label = str(f"{grade}级{college}")  # Convert label to string
+        value = label  # Use the label as the value
+
+        # Check if the college exists as a parent node
+        if college not in parent_dict:
+            parent_dict[college] = {'label': str(college), 'value': college, 'children': []}  # Convert label to string
+
+        # Add the grade as a child node under the college
+        grade_node = {'label': str(grade), 'value': grade}  # Convert label to string
+        parent_dict[college]['children'].append(grade_node)
+
+    # Convert parent_dict values to a list for the cascader options
+    options = [{'label': str(v['label']), 'value': v['value'], 'children': v.get('children', [])} for v in
+               parent_dict.values()]  # Convert label to string
+
+    return options
+
+
 
 
 def get_rule_data(grade, college):
@@ -702,11 +717,13 @@ def update_allocation_data(data):
 
 
 def generate_output_file(outputData):
-    file_path = 'output.xlsx'
+    download_directory = 'downloads'
+    file_name = outputData['rule']['college'] + '_' + str(outputData['rule']['grade']) + '_ranking.xlsx'
+    download_path = os.path.join(download_directory, file_name)
 
     # if the file is existed already, delete it
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    if os.path.exists(download_path):
+        os.remove(download_path)
 
     # Replace None entries with an empty dictionary
     processed_data = [item if item is not None else {} for item in outputData['reportData']]
@@ -715,10 +732,28 @@ def generate_output_file(outputData):
     df = pd.DataFrame(processed_data)
 
     # Create an Excel writer using pandas ExcelWriter
-    with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+    with pd.ExcelWriter(download_path, engine='openpyxl') as writer:
         # Write DataFrame to the Excel file
         df.to_excel(writer, index=False, sheet_name='Sheet1')
 
-    print(f"Excel file '{file_path}' created successfully.")
+    print(f"Excel file '{download_path}' created successfully.")
 
-    return file_path
+    return download_path
+
+
+# change the required field of the detail table according to the id
+def update_required_by_sn(data):
+    """change the required field of the detail table according to the id"""
+    with mysql_connection.connect_to_database() as conn:
+        with conn.cursor() as cursor:
+            try:
+                detail.modify_detail_message_required_field_by_id(data['id'], data['required'], cursor)
+            except Exception as e:
+                conn.rollback()
+                raise Exception("An error occurred while updating the required field")
+            else:
+                res = "The required field is updated"
+                conn.commit()
+                return res
+            finally:
+                cursor.close()

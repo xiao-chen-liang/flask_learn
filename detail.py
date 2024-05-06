@@ -74,3 +74,15 @@ def get_sn_detail_from_detail_table(sn: str, cursor: MySQLCursorAbstract):
         print(error_message)
         raise Exception(error_message)
 
+
+def modify_detail_message_required_field_by_id(id, required, cursor):
+    """modify the required field of detail table according to the id"""
+    try:
+        # Update the 'detail' table with the new required
+        cursor.execute("UPDATE detail SET required = %s WHERE id = %s", (required, id))
+        print(f"Changed the required field to {required} for the id {id}")
+        return True
+    except Exception as e:
+        error_message = f"An error occurred while changing required field in detail table: {e}"
+        print(error_message)
+        raise Exception(error_message)

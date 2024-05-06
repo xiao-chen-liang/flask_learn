@@ -215,16 +215,53 @@ def download_file():
         # Get the outputData from the request body
         outputData = request.get_json()
 
-        print(outputData)
+        # print(outputData)
 
-        file_path = core.generate_output_file(outputData)
+        download_path = core.generate_output_file(outputData)
 
-        return send_file(file_path, as_attachment=True)
+        return send_file(download_path, as_attachment=True)
     except Exception as e:
         error_message = f"An error occurred: {str(e)}"
         print(error_message)
         traceback.print_exc()
         return jsonify({'error': error_message}), 500
+
+
+# get details from the detail table by sn
+@app.route('/get_detail_messages/<string:sn>')
+def get_detail_messages(sn):
+    try:
+        return jsonify(core.get_sn_detail_from_detail_table(sn))
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+        return jsonify({'error': error_message}), 500
+
+
+# change the required of the detail table by id
+@app.route('/update_required', methods=['POST'])
+def update_required():
+    try:
+        # Get the JSON data from the request body
+        data = request.get_json()
+
+        # Assuming `data` contains the updated required
+        # You can then pass this data to your core function to update the required of the detail table
+        # Example:
+        # core.update_required(data)
+
+        # pass the data to core.py to update the required of the detail table
+        core.update_required_by_sn(data)
+        return "Required updated successfully!", 200
+
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+        return jsonify({'error': error_message}), 500
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
