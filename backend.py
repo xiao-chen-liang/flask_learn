@@ -1,8 +1,10 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import core
 import traceback
+
+from flask import Flask, request, jsonify
 from flask import send_file
+from flask_cors import CORS
+
+import core
 
 app = Flask(__name__)
 CORS(app)
@@ -64,11 +66,9 @@ def get_rules():
 
 
 # Mock data for demonstration
-rule_data = {
-    ('2020', '大数据与智能工程学院'): {'policy': 1, 'pe': 0, 'skill': 1},
-    ('2021', '大数据与智能工程学院'): {'policy': 0, 'pe': 1, 'skill': 0},
-    # Add more data as needed
-}
+rule_data = {('2020', '大数据与智能工程学院'): {'policy': 1, 'pe': 0, 'skill': 1},
+             ('2021', '大数据与智能工程学院'): {'policy': 0, 'pe': 1, 'skill': 0},  # Add more data as needed
+             }
 
 
 @app.route('/get_rule_data/<string:grade>/<string:college>')
@@ -185,6 +185,7 @@ def get_allocation_data(grade, college):
         traceback.print_exc()
         return jsonify({'error': error_message}), 500
 
+
 # update allocation data
 @app.route('/update_allocation_data', methods=['PUT'])
 def update_allocation_data():
@@ -243,15 +244,7 @@ def get_detail_messages(sn):
 @app.route('/update_required', methods=['POST'])
 def update_required():
     try:
-        # Get the JSON data from the request body
         data = request.get_json()
-
-        # Assuming `data` contains the updated required
-        # You can then pass this data to your core function to update the required of the detail table
-        # Example:
-        # core.update_required(data)
-
-        # pass the data to core.py to update the required of the detail table
         core.update_required_by_sn(data)
         return "Required updated successfully!", 200
 
@@ -260,7 +253,6 @@ def update_required():
         print(error_message)
         traceback.print_exc()
         return jsonify({'error': error_message}), 500
-
 
 
 if __name__ == '__main__':

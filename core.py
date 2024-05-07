@@ -140,12 +140,12 @@ def extract_data(data: list, info: dict):
                         detail.delete_detail_message_from_detail_table(info, cursor)
                         report.delete_report_message_from_report_table(info['sn'], cursor)
                         conn.commit()
-                        raise ce.NotAllCoursesPassedError("此成绩单存在不及格成绩且为最新成绩单，已上传成绩单已被删除，不上传此成绩单")
+                        raise ce.NotAllCoursesPassedError("此成绩单存在不及格成绩,该学生 已上传成绩单已被删除，不上传此成绩单")
             else:
                 raise ce.NotAllCoursesPassedError("Not all courses are passed, but the report is not the newest, "
                                                   "so the preview report are reserved")
         else:
-            raise ce.NotAllCoursesPassedError("此成绩单存在不及格成绩，不上传此成绩单")
+            raise ce.NotAllCoursesPassedError("此成绩单存在不及格，缺考或补考成绩，不上传此成绩单")
 
     return detail_data
 
@@ -179,7 +179,7 @@ def update_report(info, detail_data):
             conn.rollback()
             raise e
         else:
-            res = "上传成功"
+            res = "更新成功"
             conn.commit()
             return res
         finally:
@@ -208,7 +208,7 @@ def upload_report(info, detail_data):
             conn.rollback()
             raise e
         else:
-            res = "更新成功"
+            res = "上传成功"
             conn.commit()
         finally:
             cursor.close()
@@ -381,6 +381,12 @@ def update_required_score_and_sum(data):
 def check_all_pass(detail_data):
     """every course must be passed"""
     for row in detail_data:
+        if row[4] == "缺考" or row[4] == "合格":
+            return False
+        if row[4] == "免修":
+            # delete this row
+            detail_data.remove(row)
+            continue;
         if float(row[4]) < 60:
             return False
     return True
