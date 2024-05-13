@@ -24,6 +24,12 @@ pip install mysql-connector-python
 python .\backend.py
 
 flask --app backend run
+
+python -m unittest test_detail.py
+
+pip install pytest
+
+pip install jupyter
 ```
 
 # 运行前端服务
