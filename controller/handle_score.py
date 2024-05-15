@@ -4,7 +4,7 @@ import model.rule as rule
 import model.detail as detail
 import model.allocation as allocation
 import traceback
-import mysql_connection
+import controller.mysql_connection as mysql_connection
 from decimal import Decimal
 import pandas as pd
 
@@ -425,7 +425,7 @@ def update_allocation_data(data):
 
 
 def generate_output_file(outputData):
-    download_directory = 'result_table'
+    download_directory = 'src/result_table'
     file_name = outputData['rule']['college'] + '_' + str(outputData['rule']['grade']) + '_ranking.xlsx'
     download_path = os.path.join(download_directory, file_name)
 

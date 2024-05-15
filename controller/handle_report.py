@@ -1,16 +1,15 @@
 from werkzeug.datastructures import FileStorage
 import pdfplumber
-from openpyxl import Workbook
 import os
 import model.report as report
 import model.rule as rule
 import model.detail as detail
 import model.allocation as allocation
 import re
-import custom_exceptions as ce
+import controller.custom_exceptions as ce
 import traceback
-import mysql_connection
-import controller
+import controller.mysql_connection as mysql_connection
+import controller.handle_score as handle_score
 
 
 def extract_info(text: str):
@@ -106,9 +105,6 @@ def extract_data(data: list, info: dict):
                 row.append(semester)
                 last_data.append(row)
 
-        # Create a workbook and select the active worksheet
-        wb = Workbook()
-        ws = wb.active
         detail_data = []
 
         # Write data to the worksheet
@@ -214,7 +210,7 @@ def upload_report(info, detail_data):
             cursor.close()
 
     try:
-        controller.update_required_score_and_sum_of_sn(info)
+        handle_score.update_required_score_and_sum_of_sn(info)
     except Exception as e:
         raise e
 
@@ -224,8 +220,8 @@ def upload_report(info, detail_data):
 def handle_file(file: FileStorage):
     """Handle the uploaded file and extract the required information"""
 
-    upload_directory = 'temp_score_report'
-    score_report_directory = 'score_report'
+    upload_directory = 'src/temp_score_report'
+    score_report_directory = 'src/score_report'
     try:
         filename = file.filename
         upload_path = os.path.join(upload_directory, filename)
