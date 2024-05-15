@@ -2,7 +2,7 @@ import mysql.connector
 from configparser import ConfigParser
 
 
-def read_db_config(filename='config.ini', section='mysql'):
+def read_db_config(filename='config/config.ini', section='mysql'):
     # Create a parser object
     parser = ConfigParser()
     # Read the configuration file
