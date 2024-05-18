@@ -3,112 +3,76 @@ import random
 import sqlite3
 import string
 import time
+import traceback
 from functools import wraps
 import re
 from flask import Flask, request, Response
 from flask_cors import CORS
 from flask import jsonify
+from flask import Blueprint
+import model.account_table as acc
+import view.expiringDict as expiringDict
+import controller.handle_account as handle_account
 
-app = Flask(__name__)
-CORS(app)
+account = Blueprint("account", __name__)
+exp_dict = expiringDict.ExpiringDict();
 
-# 增删改查简单封装
-def RunSqlite(db, table, action, field, value):
-    connect = sqlite3.connect(db)
-    cursor = connect.cursor()
 
-    # 执行插入动作
-    if action == "insert":
-        insert = f"insert into {table}({field}) values({value});"
-        if insert is None or len(insert) == 0:
-            return False
-        try:
-            cursor.execute(insert)
-        except Exception:
-            return False
 
-    # 执行更新操作
-    elif action == "update":
-        update = f"update {table} set {value} where {field};"
-        if update is None or len(update) == 0:
-            return False
-        try:
-            cursor.execute(update)
-        except Exception:
-            return False
 
-    # 执行查询操作
-    elif action == "select":
-        # 查询条件是否为空
-        if value == "none":
-            select = f"select {field} from {table};"
+@account.route("/get_verification", methods=["Post"])
+def getVerification():
+    obtain_dict = request.get_json()
+    if len(obtain_dict) != 0 and len(obtain_dict) == 1:
+        username = obtain_dict["username"]
+
+        if not is_valid_email(username):
+            return jsonify({'message': '传入用户名不合法'}), 400
         else:
-            select = f"select {field} from {table} where {value};"
+            print(username)
+            verification_code = handle_account.send_verification_code(username);
+            exp_dict.set(username, verification_code)
+            print(exp_dict.get(username))
 
-        try:
-            ref = cursor.execute(select)
-            ref_data = ref.fetchall()
-            connect.commit()
-            connect.close()
-            return ref_data
-        except Exception:
-            return False
+            print("a" * 30)
+            print(verification_code)
+            print(username)
 
-    # 执行删除操作
-    elif action == "delete":
-        delete = f"delete from {table} where {field};"
-        if delete is None or len(delete) == 0:
-            return False
-        try:
-            cursor.execute(delete)
-        except Exception:
-            return False
-    try:
-        connect.commit()
-        connect.close()
-        return True
-    except Exception:
-        return False
+            return jsonify({'message': '验证码发送成功'}), 200
+    else:
+        return jsonify({'message': '传入参数个数不正确'}), 400
 
-@app.route("/create", methods=["GET"])
-def create():
-    conn = sqlite3.connect("./database.db")
-    cursor = conn.cursor()
-    create_auth = "create table UserAuthDB(" \
-                  "id INTEGER primary key AUTOINCREMENT not null unique," \
-                  "username varchar(64) not null unique," \
-                  "password varchar(64) not null" \
-                  ")"
-    cursor.execute(create_auth)
 
-    create_session = "create table SessionAuthDB(" \
-                     "id INTEGER primary key AUTOINCREMENT not null unique," \
-                     "username varchar(64) not null unique," \
-                     "token varchar(128) not null unique," \
-                     "invalid_date int not null" \
-                     ")"
+@account.route("/insert")
+def insert():
+    id = acc.insert_account(username='john_doe', password='password123', token='xyztoken', token_invalid=1234567890,
+                            verification='1234', verification_invalid=1234567890)
+    print(id)
+    print("1" * 50)
+    return "success"
 
-    cursor.execute(create_session)
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return "create success"
 
-# 验证用户名密码是否合法
-def CheckParameters(*kwargs):
-    for item in range(len(kwargs)):
-        # 先验证长度
-        if len(kwargs[item]) >= 256 or len(kwargs[item]) == 0:
-            return False
+@account.route("/update")
+def update():
+    acc.update_account(id=5, username='new_username', password='new_password', token='new_token',
+                       token_invalid=9876543210, verification='5678', verification_invalid=9876543210)
+    print("1" * 50)
+    return "success"
 
-        # # 先小写,然后去掉两侧空格,去掉所有空格
-        # local_string = kwargs[item].lower().strip().replace(" ", "")
 
-        # 判断是否只包含 大写 小写 数字
-        for kw in kwargs[item]:
-            if not kw.isupper() and not kw.islower() and not kw.isdigit():
-                return False
-    return True
+@account.route("/delete")
+def delete():
+    acc.delete_account(username='xiao')
+    print("1" * 50)
+    return "success"
+
+
+@account.route("/select")
+def table():
+    acc.select_account(username='xiao@qq.com', password='111111')
+    print("1" * 50)
+    return "success"
+
 
 def is_valid_email(email):
     """
@@ -128,6 +92,7 @@ def is_valid_email(email):
         return True
     else:
         return False
+
 
 def is_valid_password(password):
     """
@@ -159,57 +124,44 @@ def is_valid_password(password):
     # All criteria met, password is valid
     return True
 
-# 登录认证模块
-@app.route("/login", methods=["POST"])
-def login():
-    if request.method == "POST":
-        # 获取参数信息
-        obtain_dict = request.get_json()
-        if len(obtain_dict) != 0 and len(obtain_dict) == 2:
-            username = obtain_dict["username"]
-            password = obtain_dict["password"]
 
-            print(username, password)
+# 登录认证模块
+@account.route("/login", methods=["POST"])
+def login():
+    obtain_dict = request.get_json()
+    if len(obtain_dict) != 0 and len(obtain_dict) == 2:
+        username = obtain_dict["username"]
+        password = obtain_dict["password"]
+
+        print(username, password)
+
+        if is_valid_email(username) == False or is_valid_password(password) == False:
+            return jsonify({'message': '传入用户名密码不合法'}), 400
+
+        # 查询用户是否存在
+        select = acc.select_account(username=username)
+        if select is None:
             return jsonify({'message': '用户名不存在'}), 400
 
-            # 验证是否合法
-            # is_true = CheckParameters(username, password)
-            is_true = is_valid_email(username) and is_valid_password(password)
-            if is_true == True:
-                # 查询是否存在该用户
-                select = RunSqlite("./database.db", "UserAuthDB", "select", "username,password",
-                                   f"username='{username}'")
-                if select[0][0] is None:
-                    return
-                if select[0][0] == username and select[0][1] == password:
-                    # 查询Session列表是否存在
-                    select_session = RunSqlite("./database.db", "SessionAuthDB", "select", "token",
-                                               f"username='{username}'")
-                    if select_session != []:
-                        ref = {"message": ""}
-                        ref["message"] = select_session[0][0]
-                        return Response(json.dumps(ref), status=200, mimetype="application/json")
+        hashed_password, salt = handle_account.hash_password(password, select['salt'].encode())
+        print("1" * 20)
 
-                    # Session不存在则需要重新生成
-                    else:
-                        # 生成并写入token和过期时间戳
-                        token = ''.join(random.sample(string.ascii_letters + string.digits, 32))
+        print(hashed_password)
 
-                        # 设置360秒周期,过期时间
-                        time_stamp = int(time.time()) + 360
+        if select['password'] != hashed_password:
+            return jsonify({'message': '密码错误'}), 400
 
-                        insert = RunSqlite("./database.db", "SessionAuthDB", "insert", "username,token,invalid_date",
-                                           f"'{username}','{token}',{time_stamp}")
-                        if insert == True:
-                            ref = {"message": ""}
-                            ref["message"] = token
-                            return jsonify(ref), 200
-                else:
-                    return jsonify({'message': '用户名或密码错误'}), 400
-            else:
-                return jsonify({'message': '输入参数不可用'}), 400
+        token = ''.join(random.sample(string.ascii_letters + string.digits, 32))
+        time_stamp = int(time.time()) + 1200
+        print("1" * 30)
+        print(select)
+        print(type(select))
+        acc.update_account(select['id'], token=token, token_invalid=time_stamp)
+        return jsonify({"message": "登陆成功", "token": token}), 200
 
-    return jsonify({'message': '未知错误'}), 400
+    else:
+        return jsonify({'message': '输入参数不可用'}), 400
+
 
 # 检查登录状态 token是否过期的装饰器
 def login_check(func):
@@ -217,93 +169,78 @@ def login_check(func):
     def wrapper(*args, **kwargs):
         print("处理登录逻辑部分: {}".format(request.url))
 
+        print("1" * 30)
+
+        print(request.headers)
+
+        print("1" * 30)
+
+        try:
+            auth_header = request.headers.get('Authorization')
+            token = auth_header.split(' ')[1]
+
+            print("token: ", token)
+        except Exception as e:
+            return jsonify({'message': '请先登录'}), 401
+
         local_timestamp = int(time.time())
+        select = acc.select_account(token=token)
+        if (select is None) or local_timestamp > select['token_invalid']:
+            return jsonify({'message': '登录过期，已退出登录，请重新登录'}), 401
 
-        # if there is no token in the header, return an error response
-        if "token" not in request.headers:
-            return jsonify({'token': 'Token 不存在,请登录获取'}), 401
-
-        # 得到token 验证是否登陆了,且token没有过期
-        get_token = request.headers.get("token")
-
-        # 验证传入参数是否合法
-        if CheckParameters(get_token) == True:
-            select = RunSqlite("./database.db", "SessionAuthDB", "select", "token,invalid_date", f"token='{get_token}'")
-            print(select)
-            # 判断是否存在记录,如果存在,在判断时间戳是否合理
-            if select != []:
-                # 如果当前时间与数据库比对,大于说明过期了需要删除原来的,让用户重新登录
-                if local_timestamp >= int(select[0][1]):
-                    print("时间戳过期了")
-                    # 删除原来的Token
-                    delete = RunSqlite("./database.db", "SessionAuthDB", "delete", f"token='{get_token}'", "none")
-                    if delete == True:
-                        return jsonify({'token': 'Token 已过期,请重新登录获取'}), 401
-                    else:
-                        return jsonify({'token': '数据库删除异常,请联系开发者'}), 401
-                else:
-                    # 验证Token是否一致
-                    if select[0][0] == get_token:
-                        print("Token验证正常,继续执行function_ptr指向代码.")
-                        # 返回到原函数
-                        return func(*args, **kwargs)
-                    else:
-                        print("Token验证错误 {}".format(select))
-                        return jsonify({'token': 'Token 传入错误'})
-
-        return jsonify({'token': 'Token 验证失败'}), 401
+        try:
+            acc.update_account(select['id'], token_invalid=local_timestamp + 1200)
+            return func(*args, **kwargs)
+        except Exception as e:
+            traceback.print_exc()
+            return jsonify({'message': '未处理异常'}), 400
 
     return wrapper
 
-# 获取参数函数
-@app.route("/GetPage", methods=["POST"])
-@login_check
-def GetPage():
-    if request.method == "POST":
-        # 获取参数信息
-        obtain_dict = request.form.to_dict()
-        if len(obtain_dict) != 0 and len(obtain_dict) == 1:
-            pagename = obtain_dict["pagename"]
-            print("查询名称: {}".format(obtain_dict["pagename"]))
 
-            # 相应头的完整写法
-            req = Response(response="ok", status=200, mimetype="application/json")
-            req.headers["Content-Type"] = "text/json; charset=utf-8"
-            req.headers["Server"] = "LyShark Server 1.0"
-            req.data = json.dumps({'message': 'hello world'})
-            return req
-        else:
-            return jsonify({'message': '传入参数错误,请携带正确参数请求'})
-    return jsonify({'token': '未知错误'})
-
-@app.route("/test_login")
+@account.route("/test_login")
 @login_check
 def test_login():
     return "You are logged in!"
 
+
 # 用户注册函数
-@app.route("/register", methods=["POST"])
+# Modify the Register route to hash the password before inserting into the database
+@account.route("/register", methods=["POST"])
 def Register():
     if request.method == "POST":
         obtain_dict = request.get_json()
-        print(obtain_dict)
-        if len(obtain_dict) != 0 and len(obtain_dict) == 2:
-            print("用户名: {} 密码: {}".format(obtain_dict["username"], obtain_dict["password"]))
+        if len(obtain_dict) != 0 and len(obtain_dict) == 3:
             reg_username = obtain_dict["username"]
             reg_password = obtain_dict["password"]
+            reg_verification = obtain_dict["verification"].strip()
 
-            # 验证是否合法
-            if is_valid_email(reg_username) == False or is_valid_password(reg_password) == False:
+            print("saved code")
+            print(exp_dict.get(reg_username))
+            print("input code")
+            print(reg_verification)
+            print("input_username")
+            print(reg_username)
+            print("input_password")
+            print(reg_password)
+            if (reg_username in exp_dict) == False or exp_dict.get(reg_username) != reg_verification:
+                return jsonify({'message': '验证失败'}), 400
+
+            if not is_valid_email(reg_username) or not is_valid_password(reg_password):
                 return jsonify({'message': '传入用户名密码不合法'}), 400
 
-            # 查询用户是否存在
-            select = RunSqlite("database.db", "UserAuthDB", "select", "id", f"username='{reg_username}'")
-            if select != []:
+            select = acc.select_account(username=reg_username)
+            if select is not None:
                 return jsonify({'message': '用户名已被注册'}), 400
             else:
-                insert = RunSqlite("database.db", "UserAuthDB", "insert", "username,password",
-                                   f"'{reg_username}','{reg_password}'")
-                if insert == True:
+                # Hash the password before inserting into the database
+                hashed_password, salt = handle_account.hash_password(reg_password)
+
+                print("a"*30)
+                print(reg_password)
+
+                insert = acc.insert_account(username=reg_username, password=hashed_password, salt=salt)
+                if isinstance(insert, int):
                     return jsonify({'message': '注册成功'}), 200
                 else:
                     return jsonify({'message': '注册失败'}), 400
@@ -311,43 +248,44 @@ def Register():
             return jsonify({'message': '传入参数个数不正确'}), 400
     return jsonify({'message': '未知错误'})
 
-# 密码修改函数
-@app.route("/modify", methods=["POST"])
+
+# Modify the passwordChange route to hash the new password before updating in the database
+@account.route("/passwordChange", methods=["POST"])
 @login_check
-def modify():
+def passwordChange():
     if request.method == "POST":
-        obtain_dict = request.form.to_dict()
-        if len(obtain_dict) != 0 and len(obtain_dict) == 1:
-            mdf_password = obtain_dict["password"]
-            get_token = request.headers.get("token")
-            print("获取token: {} 修改后密码: {}".format(get_token, mdf_password))
+        obtain_dict = request.get_json()
+        if len(obtain_dict) != 0 and len(obtain_dict) == 4:
+            if obtain_dict["newPassword"] != obtain_dict["confirmNewPassword"]:
+                return jsonify({'message': '密码不一致'}), 400
+            print("2" * 32)
 
-            # 验证是否合法
-            if is_valid_password(mdf_password) == False:
-                return jsonify({'message': '传入密码不合法'})
+            reg_username = obtain_dict["email"]
+            reg_password = obtain_dict["newPassword"]
+            old_password = obtain_dict["oldPassword"]
+            print("3" * 32)
 
-            # 先得到token对应用户名
-            select = RunSqlite("./database.db", "SessionAuthDB", "select", "username", f"token='{get_token}'")
-            if select != []:
-                # 接着直接修改密码即可
-                modify_username = str(select[0][0])
-                print("得到的用户名: {}".format(modify_username))
-                update = RunSqlite("database.db", "UserAuthDB", "update", f"username='{modify_username}'",
-                                   f"password='{mdf_password}'")
-                if update == True:
-                    # 删除原来的token,让用户重新获取
-                    delete = RunSqlite("./database.db", "SessionAuthDB", "delete", f"username='{modify_username}'",
-                                       "none")
-                    print("删除token状态: {}".format(delete))
-                    return jsonify({'message': '修改成功,请重新登录获取Token'})
+            select = acc.select_account(username=reg_username)
 
-                else:
-                    return jsonify({'message': '修改失败'})
-            else:
-                return jsonify({'message': '不存在该Token,无法修改密码'})
-        else:
-            return jsonify({'message': '传入参数个数不正确'})
-    return jsonify({'message': '未知错误'})
+            print("41" * 10)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+            old_hashed_password, salt = handle_account.hash_password(old_password, select['salt'].encode())
+
+            print("42" * 10)
+
+            if old_hashed_password != select['password']:
+                return jsonify({'message': '密码错误'}), 400
+            print("4" * 32)
+
+            if not is_valid_email(reg_username) or not is_valid_password(reg_password):
+                return jsonify({'message': '传入用户名密码不合法'}), 400
+
+            print("5" * 32)
+
+            # Hash the new password before updating in the database
+            hashed_password, new_salt = handle_account.hash_password(reg_password)
+            acc.update_account(id=select['id'], password=hashed_password, salt=new_salt)
+            return jsonify({'message': '修改成功'}), 200
+
+    return jsonify({'message': '未知错误'}), 400
+

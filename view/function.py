@@ -3,9 +3,11 @@ from flask import request, jsonify, send_file
 import controller.handle_score as handle_score
 import controller.handle_report as handle_report
 from flask import Blueprint
+import view.account as account
 
 function = Blueprint('function', __name__)
 @function.route('/upload', methods=['POST'])
+@account.login_check
 def upload_file():
     """
      上传文件
@@ -52,6 +54,7 @@ def internal_server_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
 @function.route('/get_grades_and_colleges')
+@account.login_check
 def get_rules():
     """
          获得所有的年级和学院
@@ -81,6 +84,7 @@ def get_rules():
         return jsonify({'error': error_message}), 500
 
 @function.route('/get_rule_data/<string:grade>/<string:college>')
+@account.login_check
 def get_rule_data(grade, college):
     """
             通过年级，学院获得规则数据
@@ -111,6 +115,7 @@ def get_rule_data(grade, college):
         return jsonify({'error': str(e)}), 500
 
 @function.route('/update_rule_data', methods=['POST'])
+@account.login_check
 def update_rule_data():
     """
             更新规则数据
@@ -143,6 +148,7 @@ def update_rule_data():
         return jsonify({'error': error_message}), 500
 
 @function.route('/get_options_of_grades_colleges_majors')
+@account.login_check
 def get_options_of_grades_colleges_majors():
     """
             获得年级学院专业选项
@@ -172,6 +178,7 @@ def get_options_of_grades_colleges_majors():
         return jsonify({'error': error_message}), 500
 
 @function.route('/get_rule_data_by_grade_college_major/<string:grade>/<string:college>/<string:major>')
+@account.login_check
 def get_report_data_by_grade_college_major(grade, college, major):
     """
             通过年级，学院，专业获得规则数据
@@ -202,6 +209,7 @@ def get_report_data_by_grade_college_major(grade, college, major):
         return jsonify({'error': str(e)}), 500
 
 @function.route('/get_report_data_by_grade_college/<string:grade>/<string:college>')
+@account.login_check
 def get_report_data_by_grade_college(grade, college):
     """
             通过年级，学院获得成绩单数据
@@ -232,6 +240,7 @@ def get_report_data_by_grade_college(grade, college):
         return jsonify({'error': str(e)}), 500
 
 @function.route('/update_comprehensive', methods=['PUT'])
+@account.login_check
 def update_comprehensive():
     """
          更新综合成绩
@@ -263,6 +272,7 @@ def update_comprehensive():
         return jsonify({'error': error_message}), 500
 
 @function.route('/get_allocation_data/<string:grade>/<string:college>')
+@account.login_check
 def get_allocation_data(grade, college):
     """
             通过年级，学院获得分配数据
@@ -292,6 +302,7 @@ def get_allocation_data(grade, college):
         return jsonify({'error': error_message}), 500
 
 @function.route('/update_allocation_data', methods=['PUT'])
+@account.login_check
 def update_allocation_data():
     """
             更新分配数据
@@ -323,6 +334,7 @@ def update_allocation_data():
         return jsonify({'error': error_message}), 500
 
 @function.route('/download', methods=['POST'])
+@account.login_check
 def download_file():
     """
          下载文件
@@ -354,6 +366,7 @@ def download_file():
         return jsonify({'error': error_message}), 500
 
 @function.route('/get_detail_messages/<string:sn>')
+@account.login_check
 def get_detail_messages(sn):
     """
          获得详细信息
@@ -383,6 +396,7 @@ def get_detail_messages(sn):
         return jsonify({'error': error_message}), 500
 
 @function.route('/update_required', methods=['POST'])
+@account.login_check
 def update_required():
     """
          更新是否纳入智育成绩计算
